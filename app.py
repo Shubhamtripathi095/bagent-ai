@@ -1,130 +1,161 @@
 import streamlit as st
 import time
 
-# ======================
-# PAGE CONFIG
-# ======================
 st.set_page_config(page_title="BAGENT.AI", layout="wide")
 
-# ======================
+# ==============================
 # STYLE
-# ======================
+# ==============================
 st.markdown("""
 <style>
-.block-container {
-    max-width: 1100px;
-    padding-top: 2rem;
-}
-
-.stApp {
-    background: linear-gradient(135deg, #0f172a, #1e293b);
-}
-
-h1, h2, h3, h4, p, label {
-    color: #e2e8f0 !important;
-}
-
-input {
-    background-color: #0f172a !important;
-    color: white !important;
-    border: 1px solid #38bdf8 !important;
-}
-
-button {
-    background: linear-gradient(90deg, #6366f1, #06b6d4);
-    color: white;
-}
+.block-container {max-width:1100px;}
+.stApp {background: linear-gradient(135deg,#0f172a,#1e293b);}
+h1,h2,h3,h4,p {color:#e2e8f0;}
+input {background:#0f172a;color:white;border:1px solid #38bdf8;}
+button {background:linear-gradient(90deg,#6366f1,#06b6d4);color:white;}
 </style>
 """, unsafe_allow_html=True)
 
-# ======================
+# ==============================
 # HEADER
-# ======================
-st.markdown("""
-<h1 style='text-align:center;'>🚀 BAGENT.AI</h1>
-<h3 style='text-align:center;'>Autonomous Multi-Agent Business Analyst</h3>
-""", unsafe_allow_html=True)
+# ==============================
+st.title("🚀 BAGENT.AI")
+st.caption("Autonomous Business Analyst with Knowledge-Driven Reasoning")
 
-st.success("⚡ Discovery → Knowledge → Audit → User Story Generation")
-
+st.markdown("⚡ Simulated RAG + Multi-Agent Reasoning System")
 st.markdown("---")
 
-# ======================
-# SESSION STATE
-# ======================
-if "output" not in st.session_state:
-    st.session_state.output = ""
+# ==============================
+# KNOWLEDGE BASE (RAG SIMULATION)
+# ==============================
+knowledge_base = {
+    "finance": [
+        "KYC compliance required",
+        "Fraud detection mechanisms",
+        "Transaction security",
+        "Audit logs"
+    ],
+    "healthcare": [
+        "HIPAA compliance",
+        "Patient data protection",
+        "Access control",
+        "Medical audit logs"
+    ],
+    "ecommerce": [
+        "Payment gateway",
+        "Cart management",
+        "Refund workflows",
+        "Order tracking"
+    ],
+    "hr": [
+        "Payroll validation",
+        "Employee records security",
+        "Leave management",
+        "Audit tracking"
+    ]
+}
 
-# ======================
+# ==============================
 # DOMAIN DETECTION
-# ======================
+# ==============================
 def detect_domain(text):
     text = text.lower()
-    if "loan" in text or "bank" in text:
-        return "Finance"
-    elif "hospital" in text or "patient" in text:
-        return "Healthcare"
-    elif "checkout" in text or "cart" in text:
-        return "E-commerce"
-    elif "employee" in text or "payroll" in text:
-        return "HR"
-    else:
-        return "Generic"
+    if any(x in text for x in ["loan","bank","finance"]):
+        return "finance"
+    if any(x in text for x in ["hospital","patient","health"]):
+        return "healthcare"
+    if any(x in text for x in ["cart","checkout","order"]):
+        return "ecommerce"
+    if any(x in text for x in ["employee","hr","payroll"]):
+        return "hr"
+    return "generic"
 
-# ======================
-# LAYOUT
-# ======================
-left, right = st.columns([1.2, 0.8])
+# ==============================
+# RESPONSE GENERATOR (SMART)
+# ==============================
+def generate_response(user_input):
 
-# ======================
-# LEFT SIDE (INPUT)
-# ======================
-with left:
-    st.subheader("🧠 Discovery Workspace")
+    domain = detect_domain(user_input)
+    knowledge = knowledge_base.get(domain, ["Standard validation rules", "Security compliance"])
 
-    st.info("💡 Enter your business requirement in simple language")
+    explanation = f"""
+### 🧠 AI Understanding
 
-    user_input = st.text_input(
-        label="",
-        placeholder="e.g. Build a banking fraud detection system"
-    )
+The system identifies this as a **{domain.upper()} domain requirement**.
+It involves building a solution that handles business flow, validations, and user interactions.
+"""
 
-    if st.button("🚀 Generate User Story"):
-        if user_input:
+    story = f"""
+### 📌 User Story
 
-            progress = st.progress(0)
+As a user,  
+I want to {user_input},  
+So that I can achieve business objectives efficiently.  
+"""
 
-            for i in range(100):
-                time.sleep(0.01)
-                progress.progress(i + 1)
+    acceptance = "### ✅ Acceptance Criteria\n"
+    for k in knowledge:
+        acceptance += f"- {k}\n"
 
-            domain = detect_domain(user_input)
+    edge = """
+### ⚠️ Edge Cases
+- Invalid input scenarios
+- System failure handling
+- Security breaches
+- Data inconsistency
+"""
 
-            output_text = (
-                f"Domain: {domain}\n\n"
-                f"User Story:\n"
-                f"As a user,\n"
-                f"I want to {user_input},\n"
-                f"So that I achieve my goal.\n\n"
-                f"Acceptance Criteria:\n"
-                f"- Validate inputs\n"
-                f"- Ensure security\n"
-                f"- Handle errors\n\n"
-                f"Gherkin Scenario:\n"
-                f"Scenario: Successful execution\n"
-                f"Given valid input\n"
-                f"When system processes the request\n"
-                f"Then success response is returned"
-            )
+    suggestions = """
+### 💡 AI Suggestions
+- Add monitoring dashboard
+- Implement alerts & logging
+- Ensure scalability
+- Include API integration flexibility
+"""
 
-            st.session_state.output = output_text
+    return explanation + story + acceptance + edge + suggestions
 
-    st.markdown("### 📄 Generated Output")
+# ==============================
+# USER INPUT
+# ==============================
+user_input = st.text_area(
+    "💡 Describe your requirement:",
+    placeholder="e.g. Build a loan system with fraud detection & real-time alerts"
+)
 
-    if st.session_state.output:
-        st.code(st.session_state.output)
-    else:
-        st.warning("Output will appear here after generation")
+# ==============================
+# BUTTON
+# ==============================
+if st.button("🚀 Generate AI Output"):
+    if user_input:
 
-# ======================
-# RIGHT SIDE (AGENTS)
+        status = st.empty()
+
+        for step in ["🔍 Understanding...", "🧠 Enriching Knowledge...", "⚙️ Applying Logic...", "✅ Generating Output..."]:
+            status.info(step)
+            time.sleep(0.6)
+
+        result = generate_response(user_input)
+
+        st.markdown("---")
+        st.markdown(result)
+
+# ==============================
+# SIDEBAR (RAG FEEL)
+# ==============================
+with st.sidebar:
+    st.header("🧠 Knowledge Engine")
+
+    st.markdown("""
+This system simulates a **RAG architecture**:
+
+✅ Domain detection  
+✅ Knowledge retrieval  
+✅ Context enrichment  
+✅ Structured generation  
+
+Future Upgrade:
+- Vector DB
+- Real semantic search
+- Enterprise data integration
+""")
