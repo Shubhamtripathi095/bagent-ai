@@ -92,7 +92,7 @@ with col2:
         st.success("🔥 Success: User Story dynamically synthesized!")
         st.markdown("### 📋 Staged Jira Ticket Output")
         
-        # 🧠 DYNAMIC MOCK AI LOGIC (No API Key Needed!)
+        # 🧠 DYNAMIC MOCK AI LOGIC (Zero API needed!)
         target_req = st.session_state.current_requirement
         clean_title = target_req.lower().replace("i want to", "").replace("create user story", "").replace("related where user", "").strip().title()
         if len(clean_title) > 60: clean_title = clean_title[:57] + "..."
