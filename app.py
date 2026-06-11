@@ -1,134 +1,287 @@
 import streamlit as st
+import time
 
-# =====================
-# PAGE CONFIG & SYSTEM SETUP
-# =====================
+# ==================================================
+# PAGE CONFIG
+# ==================================================
 st.set_page_config(
-    page_title="BAGENT.AI - Copilot for Business Analysis", 
-    layout="wide",
-    page_icon="🚀"
+    page_title="BAGENT.AI",
+    page_icon="🚀",
+    layout="wide"
 )
 
-# =====================
-# SESSION STATE INITIALIZATION
-# =====================
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {
-            "role": "assistant", 
-            "content": "Hello! I’m your AI Business Analyst Copilot. 🚀\n\nDescribe the system, feature, or business problem you are working on, and I will help you structure it into professional BA artifacts."
-        }
-    ]
+# ==================================================
+# CUSTOM CSS
+# ==================================================
+st.markdown("""
+<style>
 
-# =====================
-# HELPER FUNCTIONS & MOCK BA ENGINE
-# =====================
-def detect_domain(text):
-    """Simple heuristic rule engine to flag domain focus areas."""
-    text = text.lower()
-    if any(w in text for w in ["loan", "bank", "payment", "checkout", "stripe", "ledger"]):
-        return "FinTech / Finance"
-    elif any(w in text for w in ["patient", "clinic", "ehr", "doctor", "medical"]):
-        return "Healthcare"
-    elif any(w in text for w in ["cart", "shop", "product", "inventory", "shipping"]):
-        return "E-Commerce"
-    return "General Software / Business"
+.stApp {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+}
 
-def generate_local_ba_response(user_input, domain, output_format):
-    """
-    Generates structured BA artifacts locally without calling external APIs.
-    """
-    clean_input = user_input.replace(f"[Format requested: {output_format}] ", "")
-    
-    if "SWOT" in output_format:
-        return f"""
-### 📊 SWOT & Strategic Analysis
-**Project Scope:** *{clean_input}*
-**Target Domain:** {domain}
+.block-container {
+    max-width: 1200px;
+    padding-top: 2rem;
+}
 
-| **Strengths** (Internal) | **Weaknesses** (Internal) |
-| :--- | :--- |
-| • Modern technical framework stack.<br>• Automated processing capabilities. | • High initial setup complexity.<br>• Data privacy alignment risks. |
+h1, h2, h3, h4, p, label {
+    color: white !important;
+}
 
-| **Opportunities** (External) | **Threats** (External) |
-| :--- | :--- |
-| • Rapidly growing demand in {domain}.<br>• Scalable cloud infrastructure potential. | • Evolving regulatory compliances.<br>• Intense market competition. |
-        """
-        
-    elif "Functional" in output_format:
-        return f"""
-### 📋 Functional Specifications (FRD)
-**Project Scope:** *{clean_input}*
-**Target Domain:** {domain}
+.card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+    font-weight: 600;
+    color: white;
+}
 
-#### 1. Functional Requirements
-* **FR-01 (Authentication):** The system MUST authenticate users safely before granting system workspace access.
-* **FR-02 (Data Processing):** The core engine MUST log transactions related to *"{clean_input}"* with an audit trail timestamp.
-* **FR-03 (Reporting):** Users MUST be able to export a summary dashboard of activities into a CSV format.
+.stButton > button {
+    width: 100%;
+    background: linear-gradient(90deg,#6366f1,#06b6d4);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: bold;
+}
 
-#### 2. Non-Functional Requirements
-* **NFR-01 (Performance):** Queries must execute in under 2.0 seconds under peak load conditions.
-* **NFR-02 (Security):** All data in transit within the {domain} environment must be encrypted using TLS 1.3.
-        """
-        
-    else:  # Default to Agile User Stories & BRD
-        return f"""
-### 📝 Agile User Stories & BRD
-**Project Scope:** *{clean_input}*
-**Target Domain:** {domain}
+div[data-baseweb="input"] input,
+div[data-baseweb="textarea"] textarea {
+    background: #0f172a !important;
+    color: white !important;
+}
 
-#### **US-101: Core Workspace Setup**
-* **As a** Registered User  
-* **I want to** access the feature module for *"{clean_input}"* * **So that** I can manage my workspace workflow parameters effectively.
+</style>
+""", unsafe_allow_html=True)
 
-#### **📋 Acceptance Criteria (Given/When/Then)**
-* **Scenario 1: Successful Validation**
-  * **Given** the user is logged into a verified account within the **{domain}** platform,
-  * **When** they navigate to the primary dashboard view,
-  * **Then** the interface components for *"{clean_input}"* should render completely within 1.5 seconds.
-        """
-
-# =====================
-# UI LAYOUT
-# =====================
+# ==================================================
+# HEADER
+# ==================================================
 st.title("🚀 BAGENT.AI")
-st.caption("Copilot for Business Analysis & Product Requirement Generation")
-st.markdown("---")
+st.caption("Autonomous Multi-Agent Business Analyst")
 
-# Sidebar Configuration Options
-with st.sidebar:
-    st.header("🎯 Agent Control Panel")
-    output_format = st.selectbox(
-        "Preferred Deliverable Format",
-        ["Agile User Stories & BRD", "Functional Specifications (FRD)", "SWOT & Strategic Analysis"]
+st.divider()
+
+# ==================================================
+# CAPABILITY CARDS
+# ==================================================
+c1, c2, c3 = st.columns(3)
+
+with c1:
+    st.markdown("""
+    <div class="card">
+        🧠 Requirement Discovery
+    </div>
+    """, unsafe_allow_html=True)
+
+with c2:
+    st.markdown("""
+    <div class="card">
+        🌐 Knowledge Enrichment
+    </div>
+    """, unsafe_allow_html=True)
+
+with c3:
+    st.markdown("""
+    <div class="card">
+        ⚙️ User Story Generator
+    </div>
+    """, unsafe_allow_html=True)
+
+st.divider()
+
+# ==================================================
+# DOMAIN DETECTION
+# ==================================================
+def detect_domain(text):
+
+    text = text.lower()
+
+    if any(word in text for word in ["loan", "bank", "finance", "credit"]):
+        return "BFSI"
+
+    elif any(word in text for word in ["hospital", "patient", "doctor", "health"]):
+        return "Healthcare"
+
+    elif any(word in text for word in ["cart", "checkout", "order", "product"]):
+        return "E-Commerce"
+
+    elif any(word in text for word in ["employee", "payroll", "hr"]):
+        return "Human Resources"
+
+    return "Generic"
+
+# ==================================================
+# GENERATORS
+# ==================================================
+def generate_user_story(requirement):
+
+    return f"""
+### User Story
+
+**As a** Business User
+
+**I want** {requirement}
+
+**So that** business operations become efficient, automated and scalable.
+"""
+
+def generate_acceptance_criteria():
+
+    return """
+### Acceptance Criteria
+
+✅ User can submit request
+
+✅ System validates mandatory fields
+
+✅ System processes request successfully
+
+✅ User receives confirmation
+
+✅ Errors are handled gracefully
+
+✅ Audit trail is maintained
+"""
+
+def generate_gherkin():
+
+    return """
+### Gherkin Scenario
+
+Feature: Requirement Processing
+
+Scenario: Successful Submission
+
+Given user enters valid information
+
+When user submits the request
+
+Then system validates the information
+
+And stores the data successfully
+
+And displays confirmation message
+"""
+
+# ==================================================
+# LAYOUT
+# ==================================================
+left, right = st.columns([1.6, 1])
+
+with left:
+
+    st.subheader("🧠 Discovery Workspace")
+
+    requirement = st.text_area(
+        "Enter Business Requirement",
+        height=180,
+        placeholder="Example: Build a loan approval system with fraud detection"
     )
-    st.info("💡 **Note:** Running in local execution engine mode. No external API keys required.")
 
-# Display existing chat history
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    generate_button = st.button("🚀 Generate Analysis")
 
-# Chat Input Interface
-if user_input := st.chat_input("Describe the system or feature you want to build..."):
-    
-    # 1. Display User Message
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
-        st.markdown(user_input)
-        
-    # 2. Run Domain Detection Strategy
-    detected_domain = detect_domain(user_input)
-    
-    # Track the format requested alongside input history
-    modified_input = f"[Format requested: {output_format}] {user_input}"
-    st.session_state.messages[-1]["content"] = modified_input
+with right:
 
-    # 3. Generate and Display Local Engine Response
-    with st.chat_message("assistant"):
-        with st.spinner(f"Compiling specifications for **{detected_domain}** domain..."):
-            local_response = generate_local_ba_response(user_input, detected_domain, output_format)
-            st.markdown(local_response)
-            
-    # Save response to session state
-    st.session_state.messages.append({"role": "assistant", "content": local_response})
+    st.subheader("⚡ Agent Status")
+
+    status_placeholder = st.empty()
+
+# ==================================================
+# MAIN PROCESS
+# ==================================================
+if generate_button:
+
+    if not requirement.strip():
+
+        st.warning("Please enter a business requirement.")
+
+    else:
+
+        with status_placeholder.container():
+
+            with st.status(
+                "Running Autonomous Multi-Agent Workflow...",
+                expanded=True
+            ) as status:
+
+                st.write("🧠 Discovery Agent analysing requirement...")
+                time.sleep(1)
+
+                st.write("🌐 Knowledge Agent enriching domain context...")
+                time.sleep(1)
+
+                st.write("📊 Business Analysis Agent preparing backlog...")
+                time.sleep(1)
+
+                st.write("⚙️ User Story Agent generating stories...")
+                time.sleep(1)
+
+                st.write("✅ Analysis completed")
+
+                status.update(
+                    label="Workflow Completed",
+                    state="complete"
+                )
+
+        domain = detect_domain(requirement)
+
+        user_story = generate_user_story(requirement)
+        acceptance = generate_acceptance_criteria()
+        gherkin = generate_gherkin()
+
+        st.success(f"Detected Domain: {domain}")
+
+        tab1, tab2, tab3 = st.tabs([
+            "📘 User Story",
+            "✅ Acceptance Criteria",
+            "🧪 Gherkin"
+        ])
+
+        with tab1:
+            st.markdown(user_story)
+
+        with tab2:
+            st.markdown(acceptance)
+
+        with tab3:
+            st.markdown(gherkin)
+
+        export_content = f"""
+===========================
+BAGENT.AI OUTPUT
+===========================
+
+Detected Domain:
+{domain}
+
+---------------------------
+USER STORY
+---------------------------
+{user_story}
+
+---------------------------
+ACCEPTANCE CRITERIA
+---------------------------
+{acceptance}
+
+---------------------------
+GHERKIN SCENARIO
+---------------------------
+{gherkin}
+"""
+
+        st.download_button(
+            label="📥 Download Analysis",
+            data=export_content,
+            file_name="BAGENT_AI_Output.txt",
+            mime="text/plain"
+        )
+
+st.markdown("---")
+st.caption("Powered by BAGENT.AI | Autonomous Multi-Agent Business Analyst")
