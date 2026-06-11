@@ -1,54 +1,69 @@
 import streamlit as st
 import time
 
+# =====================
+# PAGE CONFIG
+# =====================
 st.set_page_config(page_title="BAGENT.AI", layout="wide")
 
-# =======================
-# PREMIUM UI
-# =======================
+# =====================
+# CLEAN PROFESSIONAL STYLE
+# =====================
 st.markdown("""
 <style>
-.stApp {
-    background: linear-gradient(135deg,#0f172a,#020617);
-}
-h1, h2, h3, p {
-    color: white;
+body {
+    background-color: #0b1220;
 }
 
-/* chat bubble */
-[data-testid="stChatMessage"] {
-    background-color: #111827;
-    border-radius: 15px;
-    padding: 12px;
-    margin-bottom: 10px;
+h1, h2, h3 {
+    color: #e5e7eb;
 }
 
-/* assistant */
-[data-testid="stChatMessage"] > div:nth-child(2) {
-    color: #e2e8f0;
+.stChatMessage {
+    border-radius: 12px;
 }
 
-/* input box */
 textarea, input {
     background-color: #020617 !important;
     color: white !important;
-    border: 1px solid #38bdf8 !important;
 }
+
+/* Keep UI clean, no heavy styling */
 </style>
 """, unsafe_allow_html=True)
 
-# =======================
+# =====================
 # HEADER
-# =======================
+# =====================
 st.markdown("# 🚀 BAGENT.AI")
 st.caption("AI Copilot for Business Analysis")
 
-# =======================
+st.markdown("---")
+
+# =====================
 # SESSION STATE
-# =======================
+# =====================
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 if "context" not in st.session_state:
     st.session_state.context = ""
 
+# =====================
+# FIRST MESSAGE (IMPORTANT)
+# =====================
+if len(st.session_state.messages) == 0:
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": "Hello — I'm your AI Business Analyst.\n\nDescribe what you want to build, and I’ll structure it professionally."
+    })
+
+# =====================
+# DOMAIN DETECTION
+# =====================
+def detect_domain(text):
+    text = text.lower()
+    if "loan" in text or "bank" in text:
+        return "Finance"
+    if "hospital" in text or "patient" in text:
+        return "Healthcare"
