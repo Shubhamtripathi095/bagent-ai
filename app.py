@@ -1,161 +1,53 @@
 import streamlit as st
 import time
 
-st.set_page_config(page_title="BAGENT.AI", layout="wide")
+st.set_page_config(page_title="BAGENT.AI ELITE", layout="wide")
 
 # =========================
 # HEADER
 # =========================
-st.title("🚀 BAGENT.AI")
-st.caption("AI Business Analyst | RAG + Multi-Agent Simulation")
+st.title("🚀 BAGENT.AI ELITE")
+st.caption("Conversational Multi-Agent AI Business Analyst (RAG + Context Engine)")
 
 # =========================
-# SESSION STATE (CHAT)
+# SESSION STATE
 # =========================
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+if "context" not in st.session_state:
+    st.session_state.context = ""
 
 # =========================
 # DOMAIN DETECTION
 # =========================
 def detect_domain(text):
     text = text.lower()
-    if "loan" in text or "bank" in text:
+    if any(x in text for x in ["loan","bank","finance"]):
         return "Finance"
-    if "hospital" in text or "patient" in text:
+    if any(x in text for x in ["hospital","patient"]):
         return "Healthcare"
-    if "checkout" in text or "cart" in text:
+    if any(x in text for x in ["checkout","cart","order"]):
         return "E-commerce"
-    if "employee" in text:
+    if any(x in text for x in ["employee","payroll"]):
         return "HR"
     return "Generic"
 
 # =========================
-# KNOWLEDGE BASE (RAG STYLE)
+# KNOWLEDGE ENGINE (RAG)
 # =========================
-domain_knowledge = {
-    "Finance": ["KYC compliance", "Fraud detection", "Transaction security"],
-    "Healthcare": ["HIPAA compliance", "Data privacy", "Audit logs"],
-    "E-commerce": ["Payment gateway", "Cart flow", "Refund system"],
-    "HR": ["Payroll validation", "Employee records", "Access management"],
+knowledge_base = {
+    "Finance": ["KYC compliance", "Fraud detection", "Secure transactions"],
+    "Healthcare": ["HIPAA compliance", "Patient data security", "Audit trails"],
+    "E-commerce": ["Payment integration", "Cart flow", "Refund handling"],
+    "HR": ["Payroll validation", "Employee records", "Access control"],
     "Generic": ["Validation rules", "Security checks"]
 }
 
 # =========================
-# AI GENERATION FUNCTION
+# MAIN AI ENGINE
 # =========================
-def generate_ai_response(user_input):
-    domain = detect_domain(user_input)
-    knowledge = domain_knowledge[domain]
+def generate_response(user_input):
 
-    response = f"""
-🧠 **Understanding Your Requirement**
+    text = user_input.lower()
 
-This looks like a **{domain} domain system**.  
-Let me break this down and structure it professionally.
-
----
-
-📌 **User Story**
-
-As a user,  
-I want to {user_input},  
-So that I can achieve the intended outcome.
-
----
-
-✅ **Acceptance Criteria**
-"""
-    for k in knowledge:
-        response += f"- {k}\n"
-
-    response += """
-- System handles errors  
-- Ensures data integrity  
-
----
-
-⚠️ **Edge Cases**
-- Invalid input handling  
-- System downtime scenarios  
-- Security breaches  
-
----
-
-💡 **AI Suggestions**
-- Add monitoring dashboards  
-- Include logging & alerts  
-- Design scalable architecture  
-
----
-
-✨ **Summary**
-This system should be designed with strong validation, compliance, and modular architecture.
-"""
-
-    return response
-
-
-# =========================
-# CHAT UI
-# =========================
-st.markdown("### 💬 AI BA Assistant")
-
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-
-# INPUT BOX
-user_input = st.chat_input("Describe your requirement...")
-
-if user_input:
-
-    # USER message
-    st.session_state.messages.append({"role": "user", "content": user_input})
-
-    with st.chat_message("user"):
-        st.markdown(user_input)
-
-    # AI response (with streaming feel)
-    with st.chat_message("assistant"):
-        placeholder = st.empty()
-        full_text = ""
-
-        steps = [
-            "🔍 Analyzing requirement...",
-            "📚 Fetching knowledge...",
-            "⚙️ Applying logic...",
-            "✍️ Generating structured output..."
-        ]
-
-        for step in steps:
-            placeholder.markdown(step)
-            time.sleep(0.5)
-
-        final_response = generate_ai_response(user_input)
-
-        for word in final_response.split():
-            full_text += word + " "
-            placeholder.markdown(full_text)
-            time.sleep(0.01)
-
-    st.session_state.messages.append({"role": "assistant", "content": final_response})
-
-
-# =========================
-# SIDEBAR
-# =========================
-with st.sidebar:
-    st.header("🧠 Knowledge Engine")
-
-    st.markdown("""
-✅ Domain Detection  
-✅ Knowledge Retrieval  
-✅ Context Enrichment  
-✅ Structured Output  
-
-🚀 Future Upgrade:
-- Vector DB  
-- Real RAG  
-- Enterprise data  
-""")
