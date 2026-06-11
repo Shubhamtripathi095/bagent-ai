@@ -7,7 +7,7 @@ st.set_page_config(page_title="BAGENT.AI ELITE", layout="wide")
 # HEADER
 # =========================
 st.title("🚀 BAGENT.AI ELITE")
-st.caption("Conversational Multi-Agent AI Business Analyst")
+st.caption("Conversational Multi-Agent AI Business Analyst (RAG + Context Engine)")
 
 st.markdown("---")
 
@@ -21,121 +21,95 @@ if "context" not in st.session_state:
     st.session_state.context = ""
 
 # =========================
+# WELCOME MESSAGE
+# =========================
+if len(st.session_state.messages) == 0:
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": """
+👋 **Welcome to BAGENT.AI ELITE**
+
+I can help you:
+- Convert ideas into user stories  
+- Generate acceptance criteria  
+- Identify edge cases  
+- Provide AI-driven insights  
+
+### 🚀 Try:
+- Build a loan system with fraud detection  
+- Create hospital patient system  
+- Design e-commerce checkout  
+"""
+    })
+
+# =========================
 # DOMAIN DETECTION
 # =========================
 def detect_domain(text):
     text = text.lower()
-    if "loan" in text or "bank" in text:
+    if any(x in text for x in ["loan","bank","finance"]):
         return "Finance"
-    if "hospital" in text or "patient" in text:
+    if any(x in text for x in ["hospital","patient","health"]):
         return "Healthcare"
-    if "checkout" in text or "cart" in text:
+    if any(x in text for x in ["checkout","cart","order"]):
         return "E-commerce"
-    if "employee" in text:
+    if any(x in text for x in ["employee","hr","payroll"]):
         return "HR"
     return "Generic"
 
 # =========================
-# KNOWLEDGE BASE
+# KNOWLEDGE BASE (RAG STYLE)
 # =========================
 knowledge_base = {
     "Finance": ["KYC compliance", "Fraud detection", "Secure transactions"],
-    "Healthcare": ["HIPAA compliance", "Patient data security"],
-    "E-commerce": ["Cart flow", "Payment integration"],
-    "HR": ["Payroll rules", "Employee data security"],
-    "Generic": ["Validation checks", "Security rules"]
+    "Healthcare": ["HIPAA compliance", "Patient data protection"],
+    "E-commerce": ["Cart management", "Payment gateway", "Refund workflows"],
+    "HR": ["Payroll validation", "Employee data security"],
+    "Generic": ["Validation rules", "Security checks"]
 }
 
 # =========================
-# AI RESPONSE LOGIC
+# AI LOGIC
 # =========================
 def generate_response(user_input):
 
-    # conversational handling
     text = user_input.lower()
 
-    if text in ["hi", "hello", "hey"]:
-        return "👋 Hello! Tell me what system you'd like to build."
+    # ✅ conversational mode
+    if text in ["hi","hello","hey"]:
+        return "👋 Hi! Tell me what system you'd like to build."
 
     if "wow" in text:
-        return "😄 Glad you liked it! Try refining your requirement."
+        return "😄 Glad you liked it! Want to enhance the requirement further?"
 
     if "thank" in text:
-        return "🙏 You're welcome! Ask anything else."
+        return "🙏 You're welcome! Let me know what you'd like to explore next."
 
-    # context
+    if len(user_input.split()) < 3:
+        return "🤖 Could you please provide more detailed system requirements?"
+
+    # ✅ CONTEXT MEMORY
     st.session_state.context += " " + user_input
+    combined = st.session_state.context
 
-    domain = detect_domain(st.session_state.context)
+    domain = detect_domain(combined)
     knowledge = knowledge_base[domain]
 
-    return domain, knowledge, st.session_state.context
+    steps = [
+        "🧠 Discovery Agent → Understanding requirement...",
+        "🌐 Knowledge Agent → Enriching context...",
+        "🛡️ Audit Agent → Validating constraints...",
+        "✍️ Writer Agent → Generating output..."
+    ]
+
+    return steps, combined, domain, knowledge
 
 
 # =========================
 # OUTPUT BUILDER
 # =========================
-def build_output(domain, knowledge, combined):
+def build_output(combined, domain, knowledge):
 
-    text = f"""
+    explanation = f"""
 🧠 **Understanding**
-This is a {domain} system with core business logic.
-
-📌 **User Story**
-As a user,
-I want to {combined},
-So that I achieve my goal.
-
-✅ **Acceptance Criteria**
-"""
-    for k in knowledge:
-        text += f"- {k}\n"
-
-    text += """
-- System handles errors
-- Ensures scalability
-
-⚠️ **Edge Cases**
-- Invalid inputs
-- Security breaches
-- High traffic
-
-💡 **Suggestions**
-- Add monitoring
-- Enable alerts
-"""
-
-    return text
-
-
-# =========================
-# CHAT DISPLAY
-# =========================
-st.markdown("### 💬 AI BA Assistant")
-
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-
-# =========================
-# INPUT BOX (FIXED ALWAYS SHOWS)
-# =========================
-user_input = st.chat_input("Describe your requirement...")
-
-if user_input:
-
-    # show user msg
-    st.session_state.messages.append({"role": "user", "content": user_input})
-
-    with st.chat_message("user"):
-        st.markdown(user_input)
-
-    with st.chat_message("assistant"):
-
-        result = generate_response(user_input)
-
-        # if conversational
-        if isinstance(result, str):
-            st.markdown(result)
-            st.session_state.messages.append({"role": "assistant", "content": result})
 
