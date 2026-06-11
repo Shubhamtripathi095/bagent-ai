@@ -1,6 +1,4 @@
 import streamlit as st
-import os
-from openai import OpenAI
 
 # =====================
 # PAGE CONFIG & SYSTEM SETUP
@@ -10,10 +8,6 @@ st.set_page_config(
     layout="wide",
     page_icon="🚀"
 )
-
-# Initialize OpenAI Client (Make sure OPENAI_API_KEY is set in your environment variables or Streamlit secrets)
-# If testing locally, you can use: os.environ["OPENAI_API_KEY"] = "your-key"
-ai_client = OpenAI()
 
 # =====================
 # SESSION STATE INITIALIZATION
@@ -27,7 +21,7 @@ if "messages" not in st.session_state:
     ]
 
 # =====================
-# HELPER FUNCTIONS
+# HELPER FUNCTIONS & MOCK BA ENGINE
 # =====================
 def detect_domain(text):
     """Simple heuristic rule engine to flag domain focus areas."""
@@ -40,42 +34,65 @@ def detect_domain(text):
         return "E-Commerce"
     return "General Software / Business"
 
-def get_ai_ba_response(messages, domain):
-    """Calls OpenAI API with a customized system prompt tailoring output to BA standards."""
-    
-    system_prompt = f"""
-    You are an expert Senior Business Analyst and Product Manager. Your job is to help users break down system descriptions into structured, professional BA artifacts.
-    Current Detected Industry Domain: {domain}
-    
-    When responding:
-    1. Be highly structured. Use Markdown headings, tables, and bullet points.
-    2. Depending on what the user asks, provide standard BA deliverables:
-       - User Stories (Format: As a... I want to... So that...) with explicit Acceptance Criteria (Given/When/Then).
-       - Functional & Non-Functional Requirements.
-       - Process flows or brief SWOT analysis if applicable.
-    3. Keep your tone professional, consultative, and sharp.
+def generate_local_ba_response(user_input, domain, output_format):
     """
+    Generates structured BA artifacts locally without calling external APIs.
+    """
+    clean_input = user_input.replace(f"[Format requested: {output_format}] ", "")
     
-    # Prepend system prompt to the conversation history
-    api_messages = [{"role": "system", "content": system_prompt}] + [
-        {"role": m["role"], "content": m["content"]} for m in messages
-    ]
-    
-    try:
-        response = ai_client.chat.completions.create(
-            model="gpt-4o-mini", # High speed, cost-effective model for structuring text
-            messages=api_messages,
-            temperature=0.2 # Lower temperature for analytical, less chaotic responses
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"⚠️ Error generating analysis: {str(e)}"
+    if "SWOT" in output_format:
+        return f"""
+### 📊 SWOT & Strategic Analysis
+**Project Scope:** *{clean_input}*
+**Target Domain:** {domain}
+
+| **Strengths** (Internal) | **Weaknesses** (Internal) |
+| :--- | :--- |
+| • Modern technical framework stack.<br>• Automated processing capabilities. | • High initial setup complexity.<br>• Data privacy alignment risks. |
+
+| **Opportunities** (External) | **Threats** (External) |
+| :--- | :--- |
+| • Rapidly growing demand in {domain}.<br>• Scalable cloud infrastructure potential. | • Evolving regulatory compliances.<br>• Intense market competition. |
+        """
+        
+    elif "Functional" in output_format:
+        return f"""
+### 📋 Functional Specifications (FRD)
+**Project Scope:** *{clean_input}*
+**Target Domain:** {domain}
+
+#### 1. Functional Requirements
+* **FR-01 (Authentication):** The system MUST authenticate users safely before granting system workspace access.
+* **FR-02 (Data Processing):** The core engine MUST log transactions related to *"{clean_input}"* with an audit trail timestamp.
+* **FR-03 (Reporting):** Users MUST be able to export a summary dashboard of activities into a CSV format.
+
+#### 2. Non-Functional Requirements
+* **NFR-01 (Performance):** Queries must execute in under 2.0 seconds under peak load conditions.
+* **NFR-02 (Security):** All data in transit within the {domain} environment must be encrypted using TLS 1.3.
+        """
+        
+    else:  # Default to Agile User Stories & BRD
+        return f"""
+### 📝 Agile User Stories & BRD
+**Project Scope:** *{clean_input}*
+**Target Domain:** {domain}
+
+#### **US-101: Core Workspace Setup**
+* **As a** Registered User  
+* **I want to** access the feature module for *"{clean_input}"* * **So that** I can manage my workspace workflow parameters effectively.
+
+#### **📋 Acceptance Criteria (Given/When/Then)**
+* **Scenario 1: Successful Validation**
+  * **Given** the user is logged into a verified account within the **{domain}** platform,
+  * **When** they navigate to the primary dashboard view,
+  * **Then** the interface components for *"{clean_input}"* should render completely within 1.5 seconds.
+        """
 
 # =====================
 # UI LAYOUT
 # =====================
 st.title("🚀 BAGENT.AI")
-st.caption("AI Copilot for Business Analysis & Product Requirement Generation")
+st.caption("Copilot for Business Analysis & Product Requirement Generation")
 st.markdown("---")
 
 # Sidebar Configuration Options
@@ -85,7 +102,7 @@ with st.sidebar:
         "Preferred Deliverable Format",
         ["Agile User Stories & BRD", "Functional Specifications (FRD)", "SWOT & Strategic Analysis"]
     )
-    st.info("💡 **Tip:** Mention specific user roles (e.g., 'Admin', 'Customer') in your text to get cleaner acceptance criteria!")
+    st.info("💡 **Note:** Running in local execution engine mode. No external API keys required.")
 
 # Display existing chat history
 for message in st.session_state.messages:
@@ -103,15 +120,15 @@ if user_input := st.chat_input("Describe the system or feature you want to build
     # 2. Run Domain Detection Strategy
     detected_domain = detect_domain(user_input)
     
-    # Add context tracking to user's input if format preferences change
+    # Track the format requested alongside input history
     modified_input = f"[Format requested: {output_format}] {user_input}"
     st.session_state.messages[-1]["content"] = modified_input
 
-    # 3. Generate and Stream/Display Bot Response
+    # 3. Generate and Display Local Engine Response
     with st.chat_message("assistant"):
-        with st.spinner(f"Analyzing specifications for **{detected_domain}** domain..."):
-            ai_response = get_ai_ba_response(st.session_state.messages, detected_domain)
-            st.markdown(ai_response)
+        with st.spinner(f"Compiling specifications for **{detected_domain}** domain..."):
+            local_response = generate_local_ba_response(user_input, detected_domain, output_format)
+            st.markdown(local_response)
             
-    # Save assistant response to session state
-    st.session_state.messages.append({"role": "assistant", "content": ai_response})
+    # Save response to session state
+    st.session_state.messages.append({"role": "assistant", "content": local_response})
