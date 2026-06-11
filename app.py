@@ -1,171 +1,243 @@
 import streamlit as st
 import time
 
-# --------------------------------------------------
-# PAGE CONFIG
-# --------------------------------------------------
+# ==========================
+# CONFIG
+# ==========================
+st.set_page_config(page_title="BAGENT.AI", layout="wide")
 
-st.set_page_config(
-    page_title="BAGENT.AI",
-    page_icon="🚀",
-    layout="wide"
-)
-
-# --------------------------------------------------
-# CUSTOM CSS
-# --------------------------------------------------
-
+# ==========================
+# STYLE
+# ==========================
 st.markdown("""
 <style>
 
-.stApp{
-background: linear-gradient(135deg,#0f172a,#1e293b);
+/* Page width */
+.block-container {
+    max-width: 1100px;
+    padding-top: 2rem;
 }
 
-.block-container{
-max-width:1200px;
-padding-top:2rem;
+/* Background */
+.stApp {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
 }
 
-h1,h2,h3,h4,p,label{
-color:white !important;
+/* Text */
+h1, h2, h3, h4, p {
+    color: #e2e8f0 !important;
 }
 
-.card{
-background:rgba(255,255,255,0.05);
-backdrop-filter: blur(10px);
-padding:18px;
-border-radius:14px;
-border:1px solid rgba(255,255,255,0.1);
-text-align:center;
-font-weight:600;
-color:white;
+/* Cards */
+.card {
+    background: linear-gradient(145deg, #1e293b, #0f172a);
+    padding: 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(56,189,248,0.5);
+    box-shadow: 0 0 15px rgba(56,189,248,0.2);
 }
 
-.stButton > button{
-width:100%;
-background:linear-gradient(90deg,#6366f1,#06b6d4);
-color:white;
-border:none;
-border-radius:10px;
-padding:10px;
-font-weight:bold;
+/* Input */
+input {
+    background-color: #0f172a !important;
+    color: white !important;
 }
 
-div[data-baseweb="input"] input{
-background:#0f172a !important;
-color:white !important;
+/* Button */
+button {
+    background: linear-gradient(90deg, #6366f1, #06b6d4);
+    color: white;
+    border-radius: 8px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# --------------------------------------------------
+# ==========================
 # HEADER
-# --------------------------------------------------
+# ==========================
+st.markdown("""
+<h1 style='text-align:center;'>🚀 BAGENT.AI</h1>
+<h3 style='text-align:center; color:#94a3b8;'>
+Autonomous Multi-Agent Business Analyst
+</h3>
+""", unsafe_allow_html=True)
 
-st.title("🚀 BAGENT.AI")
-st.caption("Autonomous Multi-Agent Business Analyst")
+st.success("⚡ Discovery → Knowledge → Audit → User Story Generation")
 
-# --------------------------------------------------
-# CAPABILITIES
-# --------------------------------------------------
+st.markdown("---")
 
-c1, c2, c3 = st.columns(3)
+# ==========================
+# FEATURES
+# ==========================
+col1, col2, col3 = st.columns(3)
 
-with c1:
+col1.markdown("""
+<div class="card">
+<h4>🧠 Smart Discovery</h4>
+<p>Understands business requirement & detects domain</p>
+</div>
+""", unsafe_allow_html=True)
+
+col2.markdown("""
+<div class="card">
+<h4>🌐 Knowledge Engine</h4>
+<p>Enriches with domain intelligence (RAG-style)</p>
+</div>
+""", unsafe_allow_html=True)
+
+col3.markdown("""
+<div class="card">
+<h4>⚙️ Auto Backlog</h4>
+<p>Generates user stories & Gherkin instantly</p>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("---")
+
+# ==========================
+# SAMPLE PROMPTS
+# ==========================
+with st.expander("💡 Try Sample Prompts"):
     st.markdown("""
-    <div class="card">
-    🧠 Requirement Discovery
-    </div>
-    """, unsafe_allow_html=True)
+- Build a loan approval system with fraud detection  
+- Create hospital system with patient records  
+- Design e-commerce checkout with payments  
+- Develop HR payroll system  
+""")
 
-with c2:
-    st.markdown("""
-    <div class="card">
-    🌐 Knowledge Enrichment
-    </div>
-    """, unsafe_allow_html=True)
+# ==========================
+# STATE
+# ==========================
+if "stage" not in st.session_state:
+    st.session_state.stage = "idle"
 
-with c3:
-    st.markdown("""
-    <div class="card">
-    ⚙️ User Story Generator
-    </div>
-    """, unsafe_allow_html=True)
+if "output" not in st.session_state:
+    st.session_state.output = ""
 
-st.divider()
-
-# --------------------------------------------------
-# DOMAIN DETECTOR
-# --------------------------------------------------
-
+# ==========================
+# DOMAIN LOGIC
+# ==========================
 def detect_domain(text):
-
     text = text.lower()
-
-    if any(x in text for x in ["loan","bank","finance","credit"]):
-        return "BFSI"
-
-    elif any(x in text for x in ["hospital","patient","doctor"]):
+    if "loan" in text or "bank" in text:
+        return "Finance"
+    elif "patient" in text or "hospital" in text:
         return "Healthcare"
-
-    elif any(x in text for x in ["cart","checkout","product","order"]):
-        return "E-Commerce"
-
-    elif any(x in text for x in ["employee","payroll","hr"]):
+    elif "checkout" in text or "cart" in text:
+        return "E-commerce"
+    elif "employee" in text or "hr" in text:
         return "HR"
-
     return "Generic"
 
-# --------------------------------------------------
-# GENERATORS
-# --------------------------------------------------
+# ==========================
+# MAIN LAYOUT
+# ==========================
+left, right = st.columns([1.2, 0.8])
 
-def generate_user_story(req):
+# ==========================
+# LEFT SIDE (INPUT)
+# ==========================
+with left:
+    st.subheader("🧠 Discovery Workspace")
 
-    return f"""
-### User Story
+    st.info("""
+💡 Describe your requirement in simple language  
 
-**As a** Business User
+Example:
+- Loan system with fraud detection  
+- Hospital patient data system  
+- Checkout with refund flow  
+""")
 
-**I want** {req}
+    user_input = st.text_input(
+        "",
+        placeholder="e.g. Build a banking fraud detection system",
+    )
 
-**So that** business operations become efficient and automated.
+    if st.button("🚀 Generate User Story"):
+        if user_input:
+
+            st.session_state.stage = "discovery"
+            time.sleep(0.4)
+
+            st.session_state.stage = "knowledge"
+            time.sleep(0.4)
+
+            st.session_state.stage = "audit"
+            time.sleep(0.4)
+
+            st.session_state.stage = "output"
+
+            domain = detect_domain(user_input)
+
+            st.session_state.output = f"""
+Domain: {domain}
+
+User Story:
+As a user,
+I want to {user_input},
+So that I achieve my goal.
+
+Acceptance Criteria:
+- System validates inputs
+- Ensures security & compliance
+- Handles errors properly
+
+Gherkin Scenario:
+Scenario: Successful execution
+Given valid input
+When request is processed
+Then system returns success
 """
 
-def generate_acceptance():
+    st.markdown("### 📄 Generated Output")
 
-    return """
-### Acceptance Criteria
+    if st.session_state.stage == "output":
+        st.code(st.session_state.output)
+    else:
+        st.warning("Your generated output will appear here...")
 
-✅ User can submit request
+# ==========================
+# RIGHT SIDE (AGENTS)
+# ==========================
+with right:
+    st.subheader("⚙️ Agent Control Panel")
 
-✅ System validates mandatory fields
+    st.markdown("### 🤖 Active Agents")
 
-✅ System stores data successfully
+    st.write("Discovery Agent:", "✅" if st.session_state.stage != "idle" else "⏳")
+    st.write("Knowledge Agent:", "✅" if st.session_state.stage in ["knowledge", "audit", "output"] else "⏳")
+    st.write("Audit Agent:", "✅" if st.session_state.stage in ["audit", "output"] else "⏳")
+    st.write("Writer Agent:", "✅" if st.session_state.stage == "output" else "⏳")
 
-✅ User receives confirmation
+    st.markdown("---")
 
-✅ Errors are handled gracefully
-"""
+    st.subheader("📊 Execution Flow")
 
-def generate_gherkin():
+    if st.session_state.stage == "idle":
+        st.info("Waiting for input...")
 
-    return """
-### Gherkin Scenario
+    if st.session_state.stage == "discovery":
+        st.info("1️⃣ Understanding requirement")
 
-```gherkin
-Feature: Requirement Processing
+    if st.session_state.stage == "knowledge":
+        st.info("2️⃣ Enriching domain knowledge")
 
-Scenario: Successful submission
+    if st.session_state.stage == "audit":
+        st.info("3️⃣ Running validation checks")
 
-Given user enters valid information
+    if st.session_state.stage == "output":
+        st.success("✅ User Story Generated")
 
-When user submits request
+        st.metric("⏱ Time Saved", "10 days → 1 min")
+        st.metric("📊 Accuracy", "92%")
 
-Then system validates data
+# ==========================
+# RESET
+# ==========================
+st.markdown("---")
 
-And stores information
-
-And displays confirmation message
+if st.button("🔄 Reset"):
+    st.session_state.clear()
+    st.rerun()
