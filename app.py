@@ -1,69 +1,46 @@
 import streamlit as st
 import time
 
-# =====================
-# PAGE CONFIG
-# =====================
 st.set_page_config(page_title="BAGENT.AI", layout="wide")
 
-# =====================
-# CLEAN PROFESSIONAL STYLE
-# =====================
-st.markdown("""
-<style>
-body {
-    background-color: #0b1220;
-}
-
-h1, h2, h3 {
-    color: #e5e7eb;
-}
-
-.stChatMessage {
-    border-radius: 12px;
-}
-
-textarea, input {
-    background-color: #020617 !important;
-    color: white !important;
-}
-
-/* Keep UI clean, no heavy styling */
-</style>
-""", unsafe_allow_html=True)
-
-# =====================
+# =========================
 # HEADER
-# =====================
-st.markdown("# 🚀 BAGENT.AI")
+# =========================
+st.title("🚀 BAGENT.AI")
 st.caption("AI Copilot for Business Analysis")
-
 st.markdown("---")
 
-# =====================
-# SESSION STATE
-# =====================
+# =========================
+# STATE INIT (IMPORTANT)
+# =========================
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = [
+        {
+            "role": "assistant",
+            "content": "Hello — I’m your AI Business Analyst.\n\nDescribe a system and I will convert it into structured requirements."
+        }
+    ]
 
 if "context" not in st.session_state:
     st.session_state.context = ""
 
-# =====================
-# FIRST MESSAGE (IMPORTANT)
-# =====================
-if len(st.session_state.messages) == 0:
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": "Hello — I'm your AI Business Analyst.\n\nDescribe what you want to build, and I’ll structure it professionally."
-    })
-
-# =====================
+# =========================
 # DOMAIN DETECTION
-# =====================
+# =========================
 def detect_domain(text):
-    text = text.lower()
-    if "loan" in text or "bank" in text:
+    t = text.lower()
+    if "loan" in t or "bank" in t:
         return "Finance"
-    if "hospital" in text or "patient" in text:
+    if "hospital" in t or "patient" in t:
         return "Healthcare"
+    if "checkout" in t or "cart" in t:
+        return "E-commerce"
+    return "General"
+
+# =========================
+# RESPONSE LOGIC
+# =========================
+def generate_response(user_input):
+    t = user_input.lower()
+
+    if t in ["hi", "hello"]:
