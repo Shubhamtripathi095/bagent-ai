@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 from services.gemini_service import generate_ba_package
 
@@ -245,4 +244,3 @@ st.divider()
 st.caption(
     "Powered by Gemini + BAGENT.AI | Autonomous Business Analyst Platform"
 )
-```
