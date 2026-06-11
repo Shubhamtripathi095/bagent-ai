@@ -1,141 +1,143 @@
 import streamlit as st
+from services.gemini_service import generate_ba_package
 
-st.set_page_config(page_title="BAGENT.AI", page_icon="🚀", layout="wide")
-
-st.title("🚀 BAGENT.AI")
-st.caption("Autonomous Business Analyst Copilot")
-
-requirement = st.text_area(
-    "Enter Business Requirement",
-    height=150,
-    placeholder="Example: Build a Loan Origination System for Auto Finance"
+st.set_page_config(
+    page_title="BAGENT.AI",
+    page_icon="🚀",
+    layout="wide"
 )
 
-def detect_domain(text):
-    text = text.lower()
-    if any(x in text for x in ["loan","finance","bank","credit"]):
-        return "BFSI"
-    if any(x in text for x in ["hospital","patient"]):
-        return "Healthcare"
-    if any(x in text for x in ["cart","checkout","order"]):
-        return "E-Commerce"
-    return "Generic"
+# -------------------------------
+# CSS
+# -------------------------------
 
-if st.button("Generate BA Artifacts") and requirement:
+st.markdown("""
+<style>
 
-    domain = detect_domain(requirement)
+.stApp{
+background:linear-gradient(
+135deg,
+#0f172a,
+#1e293b,
+#111827
+);
+}
 
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
-        "BRD","FRD","SRS","Epics","User Stories",
-        "Acceptance Criteria","Gherkin","Test Cases","Process Flow"
-    ])
+.main-title{
+font-size:48px;
+font-weight:700;
+color:white;
+}
 
-    with tab1:
-        st.markdown(f"""
-# Business Requirement Document
+.agent-card{
+background:rgba(255,255,255,0.05);
+padding:20px;
+border-radius:15px;
+border:1px solid rgba(255,255,255,0.1);
+}
 
-## Domain
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------------
+# HEADER
+# -------------------------------
+
+st.markdown(
+"""
+<div class='main-title'>
+🚀 BAGENT.AI
+</div>
+""",
+unsafe_allow_html=True
+)
+
+st.caption(
+"Autonomous Business Analyst Copilot"
+)
+
+# -------------------------------
+# DOMAIN
+# -------------------------------
+
+domain = st.selectbox(
+    "Select Domain",
+    [
+        "BFSI",
+        "Auto Finance",
+        "Retail Banking",
+        "Wealth Management",
+        "Healthcare",
+        "E-Commerce"
+    ]
+)
+
+# -------------------------------
+# REQUIREMENT
+# -------------------------------
+
+requirement = st.text_area(
+    "Business Requirement",
+    height=200,
+    placeholder="""
+Example:
+
+Build a Loan Origination System
+for Auto Finance supporting:
+
+- Customer Onboarding
+- KYC Verification
+- Credit Assessment
+- Loan Approval
+- Loan Disbursement
+"""
+)
+
+# -------------------------------
+# GENERATE
+# -------------------------------
+
+if st.button("🚀 Generate BA Package"):
+
+    if not requirement.strip():
+
+        st.warning(
+            "Please enter requirement."
+        )
+
+    else:
+
+        with st.spinner(
+            "🤖 Discovery Agent analysing requirement..."
+        ):
+
+            response = generate_ba_package(
+                f"""
+Domain:
 {domain}
 
-## Business Objective
+Requirement:
 {requirement}
+"""
+            )
 
-## Scope
-Deliver the requested business capability.
+        st.success(
+            "BA Package Generated"
+        )
 
-## Stakeholders
-- Customer
-- Business User
-- Operations Team
-- Admin
-""")
+        tabs = st.tabs([
+            "📘 Output",
+            "📥 Download"
+        ])
 
-    with tab2:
-        st.markdown("""
-# Functional Requirement Document
+        with tabs[0]:
 
-FR-001 User can submit request
+            st.markdown(response)
 
-FR-002 System validates request
+        with tabs[1]:
 
-FR-003 System stores data
-
-FR-004 System provides confirmation
-""")
-
-    with tab3:
-        st.markdown("""
-# Software Requirement Specification
-
-## Functional Requirements
-System shall process requests.
-
-## Non Functional Requirements
-- Availability: 99.9%
-- Response Time: <3 sec
-- Secure access required
-""")
-
-    with tab4:
-        st.markdown("""
-# Epics
-
-EPIC-001 Customer Onboarding
-
-EPIC-002 Request Processing
-
-EPIC-003 Reporting
-""")
-
-    with tab5:
-        st.markdown(f"""
-# User Story
-
-As a Business User
-
-I want {requirement}
-
-So that business operations become efficient.
-""")
-
-    with tab6:
-        st.markdown("""
-# Acceptance Criteria
-
-- User can submit request
-- Mandatory validation works
-- Data saved successfully
-- Confirmation displayed
-""")
-
-    with tab7:
-        st.code("""Feature: Request Processing
-
-Scenario: Successful Request
-
-Given valid details entered
-When request is submitted
-Then system processes request
-""")
-
-    with tab8:
-        st.markdown("""
-# Test Cases
-
-TC-001 Verify successful submission
-
-TC-002 Verify mandatory validations
-
-TC-003 Verify error handling
-""")
-
-    with tab9:
-        st.markdown("""
-# Process Flow
-
-As-Is:
-Manual Processing
-
-To-Be:
-Digital Submission -> Validation -> Processing -> Confirmation
-""")
+            st.download_button(
+                "Download BA Package",
+                response,
+                file_name="BA_Package.md"
+            )
